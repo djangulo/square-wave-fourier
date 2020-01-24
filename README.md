@@ -20,4 +20,4 @@ Linux:
 
 ## Images
 
-<img src="sample1.png" />
+<img src="img/sample1.png" />

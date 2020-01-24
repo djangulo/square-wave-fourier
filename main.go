@@ -1,10 +1,15 @@
 package main
 
 import (
+	"bytes"
+	"encoding/base64"
 	"fmt"
+	"image"
+	"image/gif"
 	"log"
 	"net"
 	"net/http"
+	"os"
 	"strconv"
 	"strings"
 
@@ -182,6 +187,35 @@ func setInput(w webview.WebView, which string, value int) {
 	)
 }
 
+func base64Favicon(ico string) string {
+	reader, err := os.Open(ico)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer reader.Close()
+
+	m, _, err := image.Decode(reader)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	buf := bytes.NewBuffer([]byte{})
+
+	gif.Encode(buf, m, &gif.Options{NumColors: 2})
+
+	return base64.StdEncoding.EncodeToString(buf.Bytes())
+}
+
+func insertFavicon(w webview.WebView, ico string) {
+	w.Eval(fmt.Sprintf(`(function(base64String){
+		var head = document.head || document.getElementsByTagName("head")[0];
+		var fav = document.createElement("link");
+		fav.type = "image/x-icon";
+		fav.rel = "shortcut icon";
+		fav.href = "data:image/gif;base64," + base64String;
+	})("%s")`, base64Favicon(ico)))
+}
+
 func main() {
 	url := startServer()
 	w := webview.New(webview.Settings{
@@ -192,6 +226,7 @@ func main() {
 		URL:                    url,
 		ExternalInvokeCallback: handleRPC,
 	})
+	insertFavicon(w, "img/favicon.gif")
 	w.SetColor(200, 200, 200, 255)
 	defer w.Exit()
 	w.Run()
