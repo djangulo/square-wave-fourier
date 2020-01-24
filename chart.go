@@ -11,9 +11,15 @@ import (
 	chart "github.com/wcharczuk/go-chart"
 )
 
+
+const (
+	imageHeight = 260
+	imageWidth  = 780
+)
+
 func yFormatter(v interface{}) string {
 	x := v.(float64)
-	return fmt.Sprintf("%.6f", x)
+	return fmt.Sprintf("%.3f", x)
 }
 
 func xFormatter(v interface{}) string {
@@ -36,7 +42,7 @@ func makeHarmonicSeries() []chart.Series {
 	return series
 }
 
-func makeSquareWave() []chart.Series {
+func makeSquareWaveSeries() []chart.Series {
 	series := make([]chart.Series, 0)
 	s := chart.ContinuousSeries{
 		Name:            "Sum of harmonics",
@@ -51,8 +57,12 @@ func makeSquareWave() []chart.Series {
 
 func makeXTicks() []chart.Tick {
 	ticks := make([]chart.Tick, 0)
-	for i := 0; i < 10; i++ {
-		ticks = append(ticks, chart.Tick{Value: timeArray[i*len(timeArray)/10], Label: xFormatter(timeArray[i*len(timeArray)/10])})
+	for i := 0; i < 11; i++ {
+		t := chart.Tick{
+			Value: float64(i)/10.0,
+			Label: xFormatter(float64(i)/10.0),
+		}
+		ticks = append(ticks, t)
 	}
 	return ticks
 }
@@ -65,31 +75,35 @@ func makeYTicks() []chart.Tick {
 	return ticks
 }
 
-const (
-	imageHeight = 260
-	imageWidth  = 600
-)
 
-func getHarmonics() string {
+func getChart(which string) string {
+	var f func() []chart.Series
+	switch which {
+	case "square":
+		f = makeSquareWaveSeries
+	default:
+		f = makeHarmonicSeries
+	}
 
 	xaxis := chart.XAxis{
+		Name:           "Time (t)",
 		ValueFormatter: xFormatter,
 		Ticks:          makeXTicks(),
 		TickPosition:   chart.TickPositionUnderTick,
 	}
 	yaxis := chart.YAxis{
+		Name: "A*Sin(t*ω+phase)",
 		ValueFormatter: yFormatter,
 		Ticks:          makeYTicks(),
 	}
 
 	graph := chart.Chart{
-		Series: makeHarmonicSeries(),
+		Series: f(),
 		Width:  imageWidth,
 		Height: imageHeight,
 		XAxis:  xaxis,
 		YAxis:  yaxis,
 	}
-
 	buffer := bytes.NewBuffer([]byte{})
 	err := graph.Render(chart.PNG, buffer)
 	if err != nil {
@@ -98,34 +112,13 @@ func getHarmonics() string {
 
 	base64Str := base64.StdEncoding.EncodeToString(buffer.Bytes())
 	return base64Str
+
 }
 
 func getSquareWave() string {
+	return getChart("square")
+}
 
-	xaxis := chart.XAxis{
-		ValueFormatter: xFormatter,
-		Ticks:          makeXTicks(),
-		TickPosition:   chart.TickPositionUnderTick,
-	}
-	yaxis := chart.YAxis{
-		ValueFormatter: yFormatter,
-		Ticks:          makeYTicks(),
-	}
-
-	graph := chart.Chart{
-		Series: makeSquareWave(),
-		Width:  imageWidth,
-		Height: imageHeight,
-		XAxis:  xaxis,
-		YAxis:  yaxis,
-	}
-	buffer := bytes.NewBuffer([]byte{})
-	err := graph.Render(chart.PNG, buffer)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	base64Str := base64.StdEncoding.EncodeToString(buffer.Bytes())
-	return base64Str
-
+func getHarmonics() string {
+	return getChart("harmonics")
 }

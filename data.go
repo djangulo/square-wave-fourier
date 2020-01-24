@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"math"
+	"sync"
 )
 
 const (
@@ -13,10 +14,16 @@ var (
 	harmonicCount int = 10
 	harmonics     []*Harmonic
 	baseFreq      int       = 5
+	basePhase     int       = 0
 	tInterval     float64   = 0.001
 	timeArray     []float64 = make([]float64, valueLength)
 	harmonicSum             = make([]float64, valueLength)
 )
+
+var cache struct {
+	sync.Mutex
+	harmonics map[int]*Harmonic
+}
 
 func init() {
 	buildTimeArray()
@@ -30,6 +37,19 @@ func buildTimeArray() {
 		timeArray[i] = timeArray[i-1] + tInterval
 	}
 }
+
+// func buildHarmonics() {
+// 	harmonics = make([]*Harmonic, harmonicCount)
+// 	for i := 1; i <= harmonicCount; i++ {
+// 		cache.Lock()
+// 		if h, ok := cache.harmonics[i]; ok {
+// 			harmonics[i-1] = h
+// 		} else {
+// 			harmonics[i-1] = NewHarmonic(i)
+// 		}
+// 		cache.Unlock()
+// 	}
+// }
 
 func buildHarmonics() {
 	harmonics = make([]*Harmonic, harmonicCount)
@@ -97,7 +117,7 @@ func (h *Harmonic) ValueAt(t float64) float64 {
 }
 
 func getPhase(i int) float64 {
-	return 0
+	return float64(basePhase)
 }
 
 func getFrequency(i int) float64 {
