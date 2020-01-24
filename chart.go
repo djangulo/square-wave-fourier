@@ -11,7 +11,6 @@ import (
 	chart "github.com/wcharczuk/go-chart"
 )
 
-
 const (
 	imageHeight = 260
 	imageWidth  = 780
@@ -59,8 +58,8 @@ func makeXTicks() []chart.Tick {
 	ticks := make([]chart.Tick, 0)
 	for i := 0; i < 11; i++ {
 		t := chart.Tick{
-			Value: float64(i)/10.0,
-			Label: xFormatter(float64(i)/10.0),
+			Value: float64(i) / 10.0,
+			Label: xFormatter(float64(i) / 10.0),
 		}
 		ticks = append(ticks, t)
 	}
@@ -74,7 +73,6 @@ func makeYTicks() []chart.Tick {
 	}
 	return ticks
 }
-
 
 func getChart(which string) string {
 	var f func() []chart.Series
@@ -92,7 +90,7 @@ func getChart(which string) string {
 		TickPosition:   chart.TickPositionUnderTick,
 	}
 	yaxis := chart.YAxis{
-		Name: "A*Sin(t*ω+phase)",
+		Name:           "y=A*Sin(t*ω+phase)",
 		ValueFormatter: yFormatter,
 		Ticks:          makeYTicks(),
 	}
