@@ -9,11 +9,19 @@ import (
 	"log"
 
 	chart "github.com/wcharczuk/go-chart"
+	"github.com/wcharczuk/go-chart/drawing"
 )
 
 const (
-	imageHeight = 260
-	imageWidth  = 780
+	imageHeight   = 260
+	imageWidth    = 780
+	chartDPI      = 300.0
+	titleFontSize = 4.5
+	axisFontSize  = 3.5
+)
+
+var (
+	fontColor = drawing.Color{30, 30, 30, 255}
 )
 
 func yFormatter(v interface{}) string {
@@ -76,31 +84,52 @@ func makeYTicks() []chart.Tick {
 
 func getChart(which string) string {
 	var f func() []chart.Series
+	var title string
 	switch which {
 	case "square":
+		title = "Square wave"
 		f = makeSquareWaveSeries
 	default:
+		if harmonicCount > 1 {
+			title = fmt.Sprintf("Harmonics 1 - %d", harmonicCount)
+		} else {
+			title = "Harmonic 1"
+		}
 		f = makeHarmonicSeries
+	}
+
+	fontStyle := func(size float64) chart.Style {
+		return chart.Style{
+			FontSize:  size,
+			FontColor: fontColor,
+		}
 	}
 
 	xaxis := chart.XAxis{
 		Name:           "Time (t)",
+		NameStyle:      fontStyle(titleFontSize),
 		ValueFormatter: xFormatter,
 		Ticks:          makeXTicks(),
 		TickPosition:   chart.TickPositionUnderTick,
+		Style:          fontStyle(axisFontSize),
 	}
 	yaxis := chart.YAxis{
 		Name:           "y=A*Sin(t*ω+phase)",
+		NameStyle:      fontStyle(titleFontSize),
 		ValueFormatter: yFormatter,
 		Ticks:          makeYTicks(),
+		Style:          fontStyle(axisFontSize),
 	}
 
 	graph := chart.Chart{
-		Series: f(),
-		Width:  imageWidth,
-		Height: imageHeight,
-		XAxis:  xaxis,
-		YAxis:  yaxis,
+		Title:      title,
+		TitleStyle: fontStyle(titleFontSize),
+		Series:     f(),
+		Width:      imageWidth,
+		Height:     imageHeight,
+		XAxis:      xaxis,
+		YAxis:      yaxis,
+		DPI:        chartDPI,
 	}
 	buffer := bytes.NewBuffer([]byte{})
 	err := graph.Render(chart.PNG, buffer)
